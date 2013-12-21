@@ -5,7 +5,8 @@ import string
 import re
 import os
 
-import threads
+from . import threads
+import collections
 
 class Bot(object):
   def __init__(self, host, **kwargs):
@@ -67,7 +68,7 @@ class Bot(object):
     separate by \n. This script takes care of both.
     """
     while True:
-      self._inbuffer = self._inbuffer + self.socket.recv(1024)
+      self._inbuffer = self._inbuffer + self.socket.recv(1024).decode()
       # Some IRC servers disregard the RFC and split lines by \n rather than \r\n.
 
       temp = self._inbuffer.split("\n")
@@ -85,7 +86,7 @@ class Bot(object):
     input. If there is a match, the listener's associated function is called
     with all the regular expression's matched subgroups.
     """
-    for regex, callbacks in self.listeners.iteritems():
+    for regex, callbacks in self.listeners.items():
       match = regex.match(line)
 
       if not match:
@@ -95,8 +96,8 @@ class Bot(object):
         callback(*match.groups())
 
   def addhooks(self):
-    for func in self.__class__.__dict__.values():
-      if callable(func) and hasattr(func, '_type'):
+    for func in list(self.__class__.__dict__.values()):
+      if isinstance(func, collections.Callable) and hasattr(func, '_type'):
         if func._type == 'COMMAND':
           self._commands.append(func)
         elif func._type == 'PRIVMSG':
@@ -105,7 +106,7 @@ class Bot(object):
           thread = threads.JobThread(func, self)
           self._threads.append(thread)
         else:
-          raise "This is not a type I've ever heard of."
+          raise TypeError("This is not a type I've ever heard of.")
 
   def receivemessage(self, target, sender, message):
     message = message.strip()
@@ -131,7 +132,7 @@ class Bot(object):
 
         if group_dict and (len(groups) > len(group_dict)):
           # match.groups() also returns named parameters
-          raise "You cannot use both named and unnamed parameters"
+          raise IOError("You cannot use both named and unnamed parameters")
         elif group_dict:
           func(self, target, sender, **group_dict)
         else:
@@ -176,8 +177,8 @@ class Bot(object):
     self.cmd('JOIN %s' % (' '.join(channels)))
 
   def cmd(self, raw_line):
-    if self.config['verbose']: print("> %s" % raw_line)
-    self.socket.send(raw_line + "\r\n")
+    if self.config['verbose']: print(("> %s" % raw_line))
+    self.socket.send(raw_line.encode() + "\r\n".encode())
 
   def _connect(self):
     "Connects a socket to the server using options defined in `config`."

@@ -10,7 +10,7 @@ class command(object):
     # ^func_name$
     matcher = self._matcher
     if matcher is None:
-      matcher = r'^%s$' % func.func_name
+      matcher = r'^%s$' % func.__name__
 
     # convert matcher to regular expression
     matcher = re.compile(matcher)
