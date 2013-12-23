@@ -174,7 +174,7 @@ class Bot(object):
     return None
 
   def join(self, *channels):
-    self.cmd('JOIN %s' % (' '.join(channels)))
+    self.cmd('JOIN %s' % (','.join(channels)))
 
   def cmd(self, raw_line):
     if self.config['verbose']: print(("> %s" % raw_line))
