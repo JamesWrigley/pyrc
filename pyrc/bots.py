@@ -1,12 +1,12 @@
-import inspect
+import os
+import re
 import sys
 import socket
 import string
-import re
-import os
+import inspect
+import collections
 
 from . import threads
-import collections
 
 class Bot(object):
   def __init__(self, host, **kwargs):
@@ -96,7 +96,7 @@ class Bot(object):
         callback(*match.groups())
 
   def addhooks(self):
-    for func in list(self.__class__.__dict__.values()):
+    for func in vars(self.__class__).values():
       if isinstance(func, collections.Callable) and hasattr(func, '_type'):
         if func._type == 'COMMAND':
           self._commands.append(func)
@@ -132,7 +132,7 @@ class Bot(object):
 
         if group_dict and (len(groups) > len(group_dict)):
           # match.groups() also returns named parameters
-          raise IOError("You cannot use both named and unnamed parameters")
+          raise TypeError("You cannot use both named and unnamed parameters")
         elif group_dict:
           func(self, target, sender, **group_dict)
         else:
